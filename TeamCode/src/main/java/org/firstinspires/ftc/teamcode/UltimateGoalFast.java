@@ -1,17 +1,16 @@
 package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
-import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
 import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import java.util.List;
 
-// TODO: Add wobble support
+// TODO: Add distance sensor checks to high goal & two other power shots; eventually, wobble delivery for 4 rings
 
-@Autonomous(name="Tournament2", group="linearOpMode")
-public class UltimateGoalFast extends AutonomousPrimeTest {
+@Autonomous(name="--Tournament2--", group="linearOpMode")
+public class UltimateGoalFast extends AutonomousPrime2020 {
     private static final String TFOD_MODEL_ASSET = "UltimateGoal.tflite";
     private static final String LABEL_FIRST_ELEMENT = "Quad";
     private static final String LABEL_SECOND_ELEMENT = "Single";
@@ -25,7 +24,7 @@ public class UltimateGoalFast extends AutonomousPrimeTest {
         initVuforia();
         initTfod();
         tfod.activate();
-
+        mapObjects();
         if (tfod != null) {
             pause(1);
             List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
@@ -43,202 +42,222 @@ public class UltimateGoalFast extends AutonomousPrimeTest {
                 }
             }
         }
-
-        mapObjects();
         waitForStart();
-
         if (opModeIsActive()) {
-            while (opModeIsActive()) {
-                //pause(2);
-                if (noLabel == 0){
-                    wobbleLock();
-                    startLaunch(0.42);
-                    forwardEncoder(160, 1);
-                    zeroBotEncoder(1);
-                    //pause(0.2);
-                    launchAdvanceFast();
-                    launchAdvanceFast();
-                    strafeLeftEncoder(25, 1);
-                    zeroBotEncoder(1);
-                    pause(0.1);
-                    launchAdvanceFast();
-                    //launchAdvanceFast();
-                    strafeLeftEncoder(20, 1);
-                    zeroBotEncoder(1);
-                    pause(0.1);
-                    launchAdvanceFast();
-
-                    forwardEncoder(20, 1);
-                    pause(0.2);
-                    strafeRightEncoder(112, 1); //was 127, 112
-                    pause(0.2);
-                    wobbleRelease();
-                    pause(0.75);
-
-                    wobbleGrabDown(1);
-                    reverseEncoder(115, 0.5); //was 70, 110
-                    //strafeRightEncoder(43, 0.25); //was 40
-                    strafeRightEncoder(15, 0.25);
-                    pause(0.5);
-                    wobbleLatch();
-                    pause(1);
-                    forwardEncoder(75, 1);
-                    rightEncoder(5, 1); //was 2.5
-                    wobbleLatchRelease();
-                    forwardEncoder(20, 1);
-                    strafeRightEncoder(50, 1);
-                    reverseEncoder(55, 1);
-                    pause(100);
+            while (opModeIsActive()){
+                if (noLabel == 0){ //NO RINGS
+                    /*
+                    HIT 3 PS
+                     */
+                    wobbleLock(); //Servo locks to wobble
+                    intakeAdvance.setPosition(0.35); //Set intake advance arm to neutral position
+                    startLaunch(0.42); //Start spinning launch wheels
+                    forwardEncoder(160, 1); //Approach first PS
+                    zeroBotEncoder(1); //Zero angle
+                    updateDist(); //Get updated distances
+                    double rightWallDist=readRightDist-115; //Calculate how much & what direction to move in
+                    strafeRightEncoder(rightWallDist, 0.5); //Move the distance above
+                    launchAdvanceFast(); //Hit first PS
+                    strafeLeftEncoder(25, 1); //Strafe to second PS
+                    zeroBotEncoder(1); //Zero angle
+                    pause(0.3); //Pause for launch arm to move & wheels to spin up more
+                    launchAdvanceFast(); //Hit second PS
+                    strafeLeftEncoder(20, 1); //Strafe to third PS
+                    zeroBotEncoder(1); //Zero angle
+                    pause(0.1); //Pause for launch arm to move
+                    launchAdvanceFast(); //Hit third PS
+                    /*
+                    DELIVER WOBBLE
+                     */
+                    forwardEncoder(20, 1); //Move forward to be in line with zone
+                    pause(0.2); //Pause in between movements to avoid extreme slippage
+                    strafeRightEncoder(112, 1); //Strafe right to zone
+                    pause(0.2); //Pause in between movements to avoid extreme slippage
+                    wobbleRelease(); //Release wobble
+                    pause(0.75); //Pause for wobble to drop
+                    /*
+                    WOBBLE PICKUP
+                     */
+                    zeroBotEncoder(1); //Zero angle
+                    wobbleGrabDown(1); //Move wobble arm down
+                    reverseEncoder(115, 0.5); //Move back towards second wobble
+                    double count = 0; //Set counting variable for loop
+                    while(readRightDist>=10 && readBackDist >=30) { //When the wobble is detected (With a failsafe to avoid being too close to the wall)
+                        strafeRightEncoder(3, 1); //Strafe right in small increments
+                        updateDist(); //Update distance sensor values
+                        count++; //Increase the count variable
+                        if(count==13){ //If you've strafed 13 times (missed the wobble)...
+                            break; //...then break out of the loop
+                        }
+                    }
+                    pause(0.5);//Pause to make sure the wobble isn't still wobbling
+                    wobbleLatch(); //Grab the wobble
+                    /*
+                    DELIVER SECOND WOBBLE
+                     */
+                    pause(1); //Pause for grabbing the wobble
+                    wobbleGrabUp(1); //Move the arm up
+                    forwardEncoder(85, 1); //Move towards the zone
+                    rightEncoder(5, 1); //Turn to drop the wobble
+                    wobbleLatchRelease(); //Drop the wobble
+                    forwardEncoder(20, 1); //Go forward to release the wobble
+                    strafeRightEncoder(50, 1); //Strafe to park away from the wobble
+                    reverseEncoder(55, 1); //Park
+                    pause(100); //Pause so that the program does not run again
                 }
-                else if (labelName.equals("Single")){
-                    wobbleLock();
-                    intakeAdvance.setPosition(0.35);
-                    startLaunch(0.42);
-                    forwardEncoder(160, 1);
-                    zeroBotEncoder(1);
-                    //pause(0.2);
-                    launchAdvanceFast();
-                    launchAdvanceFast();
-                    strafeLeftEncoder(25, 1);
-                    zeroBotEncoder(1);
-                    pause(0.1);
-                    launchAdvanceFast();
-                    //launchAdvanceFast();
-                    strafeLeftEncoder(20, 1);
-                    zeroBotEncoder(1);
-                    pause(0.1);
-                    launchAdvanceFast();
-                    //pause(0.2);
-
-                    intakeStart(1);
-                    startLaunch(0.4455);
-                    //strafeRightEncoder(87, 0.75);
-                    strafeRightEncoder(77, 1); //was 82
-
-                    zeroBotEncoder(1);
-                    pause(0.1);
-                    //reverseEncoder(45, 0.35);
-                    reverseEncoder(45, 1);
-
-                    zeroBotEncoder(1);
-                    pause(1);
-                    launchAdvanceFast();
-                    pause(0.1);
-                    leftEncoder(0.35, 1); //was 0.375
-                    intakeEnd();
-                    pause(0.1);
-
-                    forwardEncoder(115, 1); //was 105
-                    pause(0.1);
-                    wobbleRelease();
-                    //intakeEnd();
-                    //pause(0.25);
-                    wobbleGrabDown(1);
-                    reverseEncoder(165, 1); //was 175
-                    pause(0.5);
-                    //reverseEncoder(10, 0.25);
-                    //pause(0.25);
-                    strafeRightEncoder(30, 0.25); //was 35
-                    wobbleLatch();
-                    //pause(0.75);
-                    //launchAdvanceFast();
-                    //leftEncoder(0.25, 1);
-                    pause(0.1);
-                    forwardEncoder(140, 1); //was 160
-                    pause(0.1);
-                    rightEncoder(4.25, 1); //was 3.5
-                    //reverseEncoder(150, 1);
-                    wobbleLatchRelease();
-                    //pause(0.15);
-                    forwardEncoder(10, 1);
-                    pause(100);
+                else if (labelName.equals("Single")){ //ONE RING
+                    /*
+                    HIT 3 PS
+                     */
+                    wobbleLock(); //Servo locks to wobble
+                    intakeAdvance.setPosition(0.35); //Set intake advance arm to neutral position
+                    startLaunch(0.42); //Start spinning launch wheels
+                    forwardEncoder(160, 1); //Approach first PS
+                    zeroBotEncoder(1); //Zero angle
+                    updateDist(); //Get updated distances
+                    double rightWallDist=readRightDist-115; //Calculate how much & what direction to move in
+                    strafeRightEncoder(rightWallDist, 0.5); //Move the distance above
+                    launchAdvanceFast(); //Hit first PS
+                    strafeLeftEncoder(25, 1); //Strafe to second PS
+                    zeroBotEncoder(1); //Zero angle
+                    pause(0.1); //Pause for arm to move
+                    launchAdvanceFast(); //Hit second PS
+                    strafeLeftEncoder(20, 1); //Strafe to third PS
+                    zeroBotEncoder(1); //Zero angle
+                    pause(0.1); //Pause for launch arm to move
+                    launchAdvanceFast(); //Hit third PS
+                    /*
+                    DELIVER WOBBLE
+                     */
+                    wobbleGrabDown(1); //Move wobble arm down
+                    forwardEncoder(75, 1); //Move forward to be in line with zone
+                    pause(0.1); //Pause in between movements to avoid extreme slippage
+                    strafeRightEncoder(50, 1); //Strafe right to zone
+                    wobbleRelease(); //Release wobble
+                    /*
+                    SHOOT GROUND RING
+                     */
+                    intakeStart(1); //Start intake wheels
+                    startLaunch(0.45); //Start launch wheels at a different power
+                    reverseEncoder(50, 1); //Move away from wobble
+                    pause(0.1); //Pause in between movements to avoid extreme slippage
+                    updateDist(); //Update distance sensor values
+                    rightWallDist=readRightDist-72; //Calculate how much to move
+                    rightWallDist=Math.abs(rightWallDist); //Absolute value the distance- since we know we always will be too far left
+                    strafeRightEncoder(rightWallDist, 0.5); //Move the distance above
+                    pause(0.1); //Pause in between movements to avoid extreme slippage
+                    reverseEncoder(80, 1); //Move back to intake ring
+                    zeroBotEncoder(1); //Zero angle
+                    pause(0.5); //Pause to have time for intake
+                    launchAdvanceFast(); //Shoot into high goal
+                    /*
+                    WOBBLE PICKUP
+                     */
+                    intakeEnd(); //Stop intake wheels
+                    updateDist(); //Update distance sensor values
+                    if(rightWallDist>500){ //Failsafe if walls are not detected
+                        strafeRightEncoder(15, 1); //Strafe right slightly closer to in line with wobble
+                    } else{ //If walls ARE detected...
+                        rightWallDist=readRightDist-40; //Calculate how much to move
+                        rightWallDist=Math.abs(rightWallDist); //Absolute value the distance- since we know we always will be too far left
+                        strafeRightEncoder(rightWallDist, 0.5); //Move the distance above
+                    }
+                    pause(0.1); //Pause in between movements to avoid extreme slippage
+                    reverseEncoder(37, 1); //Reverse closer to wobble
+                    updateDist(); //Update distance sensor values
+                    double count = 0; //Set counting variable for loop
+                    while(readRightDist>=10 && readBackDist >=30){ //When the wobble is detected (With a failsafe to avoid being too close to the wall)
+                        strafeRightEncoder(3, 1);  //Strafe right in small increments
+                        updateDist(); //Update distance sensor values
+                        count++; //Increase the count variable
+                        if(count==5){ //If you've strafed 13 times (missed the wobble)...
+                            break; //...then break out of the loop
+                        }
+                    }
+                    reverseEncoder(5, 0.25); //Go back to get grip on wobble
+                    strafeRightEncoder(1, 1); //Strafe to ensure hook latches
+                    wobbleLatch(); //Grab the wobble
+                    /*
+                    DELIVER SECOND WOBBLE
+                     */
+                    wobbleGrabUp(1); //Move the arm up
+                    forwardEncoder(145, 1); //Move towards the zone
+                    pause(0.1); //Pause in between movements to avoid extreme slippage
+                    rightEncoder(3.35, 1); //Turn to drop the wobble
+                    wobbleLatchRelease(); //Drop the wobble
+                    forwardEncoder(10, 1); //Go forward to release the wobble & secure parking
+                    wobbleGrabUpLarge(1); //Move arm up to make sure hook isn't still caught
+                    pause(100); //Pause so that the program does not run again
                 }
-                else if (labelName.equals("Quad")){
-                    wobbleLock();
-                    startLaunch(0.42);
-                    forwardEncoder(160, 1);
-                    zeroBotEncoder(1);
-                    //pause(0.2);
-                    launchAdvanceFast();
-                    launchAdvanceFast();
-                    strafeLeftEncoder(25, 1);
-                    zeroBotEncoder(1);
-                    pause(0.1);
-                    launchAdvanceFast();
-                    //launchAdvanceFast();
-                    strafeLeftEncoder(20, 1);
-                    zeroBotEncoder(1);
-                    pause(0.1);
-                    launchAdvanceFast();
-                    //pause(0.2);
-
-                    intakeStart(1);
-                    startLaunch(0.4455);
-                    //strafeRightEncoder(87, 0.75);
-                    strafeRightEncoder(87, 1);
-
-                    zeroBotEncoder(1);
-                    pause(0.2);
-                    //reverseEncoder(45, 0.35);
-                    reverseEncoder(45, 0.4);
-
-                    zeroBotEncoder(1);
-                    pause(0.5);
-                    launchAdvanceFast();
-                    reverseEncoder(9, 0.5);
-                    pause(0.5);
-                    launchAdvanceFast();
-                    reverseEncoder(9, 0.5);
-                    startLaunch(0.4405); //go slower for last 2
-
-                    startLaunch(0.45);
-
-                    pause(0.5);
-                    launchAdvanceFast ();
-                    reverseEncoder(9, 0.5);
-                    pause(0.5);
-                    launchAdvanceFast();
-                    pause(0.5);
-                    launchAdvanceFast();
-                    pause(0.25);
-                    intakeEnd();
-
-                    rightEncoder(0.2, 1); //lighter turn
-                    pause(0.1);
-                    forwardEncoder(210, 1);
-                    wobbleRelease();
-                    pause(0.1);
-                    reverseEncoder(95, 1);
-                    pause(100);
+                else if (labelName.equals("Quad")){ //FOUR RINGS
+                    /*
+                    HIT 3 PS
+                     */
+                    wobbleLock(); //Servo locks to wobble
+                    intakeAdvance.setPosition(0.35); //Set intake advance arm to neutral position
+                    startLaunch(0.42); //Start spinning launch wheels
+                    forwardEncoder(160, 1); //Approach first PS
+                    zeroBotEncoder(1); //Zero angle
+                    updateDist(); //Get updated distances
+                    double rightWallDist=readRightDist-115; //Calculate how much & what direction to move in
+                    strafeRightEncoder(rightWallDist, 0.5); //Move the distance above
+                    launchAdvanceFast(); //Hit first PS
+                    strafeLeftEncoder(25, 1); //Strafe to second PS
+                    zeroBotEncoder(1); //Zero angle
+                    pause(0.1); //Pause for arm to move
+                    launchAdvanceFast(); //Hit second PS
+                    strafeLeftEncoder(20, 1); //Strafe to third PS
+                    zeroBotEncoder(1); //Zero angle
+                    pause(0.1); //Pause for launch arm to move
+                    launchAdvanceFast(); //Hit third PS
+                    /*
+                    SHOOT FOUR RINGS
+                     */
+                    intakeStart(1); //Start intake wheels
+                    startLaunch(0.4455); //Start launch wheels at a different power
+                    strafeRightEncoder(87, 1); //Move right to be in line with ring stack
+                    zeroBotEncoder(1); //Zero angle
+                    pause(0.2); //Pause in between movements to avoid extreme slippage
+                    reverseEncoder(45, 0.4); //Move back to intake first ring
+                    zeroBotEncoder(1); //Zero angle
+                    pause(0.5); //Pause to have time for intake
+                    launchAdvanceFast(); //Shoot first ring into high goal
+                    reverseEncoder(9, 0.5); //Move back to intake second ring
+                    pause(0.5); //Pause to have time for intake
+                    launchAdvanceFast(); //Shoot second ring into high goal
+                    reverseEncoder(9, 0.5); //Move back to intake third ring
+                    startLaunch(0.45); //Start launch wheels at a different power
+                    pause(0.5); //Pause to have time for intake & time for wheels to spin up
+                    launchAdvanceFast (); //Shoot third ring into high goal
+                    reverseEncoder(9, 0.5); //Move back to intake fourth ring
+                    pause(0.5); //Pause to have time for intake
+                    launchAdvanceFast(); //Shoot fourth ring into high goal
+                    pause(0.5); //Pause to have time for launch servo to rest
+                    launchAdvanceFast(); //Shoot any remaining rings into high goal
+                    pause(0.25); //Pause before next movement
+                    /*
+                    DELIVER WOBBLE
+                     */
+                    intakeEnd(); //Stop intake wheels
+                    rightEncoder(0.2, 1); //Turn to approach zone at a direct angle
+                    pause(0.1); //Pause in between movements to avoid extreme slippage
+                    forwardEncoder(210, 1); //Move forward to zone
+                    wobbleRelease(); //Drop wobble
+                    pause(0.1); //Pause for wobble to drop
+                    reverseEncoder(95, 1); //Park
+                    pause(100); //Pause so that the program does not run again
                 }
-                //String label = recognition.getLabel();
                 telemetry.update();
-                        /* if(label == "single"){
-                            
-                        } 
-                        else if (label == "quad"){
-                            
-                        } else{
-                            
-                        }*/
-
             }
         }
     }
 
     private void initVuforia() {
         VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters();
-
         parameters.vuforiaLicenseKey = VUFORIA_KEY;
-        //parameters.cameraDirection = VuforiaLocalizer.CameraDirection.BACK;
         parameters.cameraName = hardwareMap.get(WebcamName.class, "Webcam");
-
-        //  Instantiate the Vuforia engine
         vuforia = ClassFactory.getInstance().createVuforia(parameters);
-
-        // Loading trackables is not necessary for the TensorFlow Object Detection engine.
     }
-
     private void initTfod() {
         int tfodMonitorViewId = hardwareMap.appContext.getResources().getIdentifier(
                 "tfodMonitorViewId", "id", hardwareMap.appContext.getPackageName());
@@ -247,40 +266,4 @@ public class UltimateGoalFast extends AutonomousPrimeTest {
         tfod = ClassFactory.getInstance().createTFObjectDetector(tfodParameters, vuforia);
         tfod.loadModelFromAsset(TFOD_MODEL_ASSET, LABEL_FIRST_ELEMENT, LABEL_SECOND_ELEMENT);
     }
-
-
-
-        /*
-        OPTION ONE
-        CV Scan for ring num (log in var)
-        Move to line
-        Shoot 3x at 80% power
-        Go back to wobble and grab
-        Drop off goal in correct zone based off of var
-        Park
-         */
-        /*
-        OPTION TWO
-        CV Scan for ring num (log in var)
-        Grab wobble
-        Move to line
-        Shoot 3x at 80% power
-        Drop off goal in correct zone based off of var
-        Park
-         */
-        /*
-        OPTION ONE PROS
-        -Potentially more consistent
-        -Easier points in beginning (if fails later, have more points still)
-        OPTION ONE CONS
-        -More time to go back for wobble and drop it off (TIME CONCERN)
-
-        OPTION TWO PROS
-        -Faster and more fluid
-        -Still gets same amount of points as option one but with chance to pick up and shoot "floor rings"
-        OPTION TWO CONS
-        -Points weighted towards end; less points if it fails at any moment
-        -Wobble may cause drag to interfere
-         */
-
 }

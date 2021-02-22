@@ -1,12 +1,9 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import java.util.Map;
-
-// TODO: Add wobble grab support
 
 @Autonomous(name="AutonomousTestCode", group="linearOpMode")
-public class MovementTest extends AutonomousPrimeTest{
+public class MovementTest extends AutonomousPrime2020 {
     @Override
     public void runOpMode(){
         mapObjects();

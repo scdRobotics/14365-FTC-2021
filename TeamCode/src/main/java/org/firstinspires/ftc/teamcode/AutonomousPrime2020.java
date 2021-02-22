@@ -34,8 +34,8 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
 
 @Disabled
-@Autonomous(name="AutonomousPrimeTest", group="Linear Opmode")
-public class AutonomousPrimeTest extends LinearOpMode {
+@Autonomous(name="AutonomousPrime2020", group="Linear Opmode")
+public class AutonomousPrime2020 extends LinearOpMode {
 
     protected DcMotorEx frontLeft=null;
     protected DcMotorEx frontRight=null;

@@ -1,8 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
-import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
 import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
@@ -10,7 +9,7 @@ import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import java.util.List;
 
 @Autonomous(name="ComputerVisionTest", group="linearOpMode")
-public class ComputerVisionTest extends AutonomousPrimeTest {
+public class ComputerVisionTest extends AutonomousPrime2020 {
     private static final String TFOD_MODEL_ASSET = "UltimateGoal.tflite";
     private static final String LABEL_FIRST_ELEMENT = "Quad";
     private static final String LABEL_SECOND_ELEMENT = "Single";
@@ -31,7 +30,7 @@ public class ComputerVisionTest extends AutonomousPrimeTest {
 
         if (opModeIsActive()) {
             while (opModeIsActive()) {
-                pause(2);
+                //pause(2);
                 if (tfod != null) {
                     List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
                     if (updatedRecognitions != null) {

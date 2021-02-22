@@ -13,6 +13,8 @@
 
 package org.firstinspires.ftc.teamcode;
 
+// TODO: Add distance sensor aided/automatic high goal targeting; we may need distance sensors on all sides for this to work
+
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -29,7 +31,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
-@TeleOp(name = "SCRIMMAGE 1", group = "Current")
+@TeleOp(name = "--Tournament2--", group = "Current")
 
 public class DB_1_7 extends OpMode {
     private ElapsedTime runtime = new ElapsedTime();

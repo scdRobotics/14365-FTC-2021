@@ -9,8 +9,6 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
-// TODO: Add wobble arm support
-
 @TeleOp(name = "Happy new year (DB_12_31)", group = "Current")
 
 public class DB_12_31 extends OpMode {
